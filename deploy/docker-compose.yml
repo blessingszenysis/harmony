@@ -8,8 +8,47 @@ x-logging:
     max-file: "10"
 
 services:
+  nginx:
+    image: nginxproxy/nginx-proxy:alpine
+    restart: always
+    pull_policy: always
+    ports:
+      - 80:80
+      - 443:443
+    labels:
+      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: ""
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      # Bind the SSL certificate path from the host system to the
+      # directory the nginx container uses for all certs.
+      - /etc/ssl/certs:/etc/nginx/certs:ro
+      - nginx_vhost:/etc/nginx/vhost.d
+      - nginx_html:/usr/share/nginx/html
+      # Include Zenysis static assets and serve them directly from nginx.
+      - ${OUTPUT_PATH}/zenysis_static:/usr/share/nginx/html/zenysis_static:ro
+      # Set a custom vhost default configuration that includes compression and caching.
+      - ${NGINX_DEFAULT_VHOST_CONFIG}:/etc/nginx/vhost.d/default:ro
+    logging: *default-logging
+
+  nginx-letsencrypt-companion:
+    image: nginxproxy/acme-companion:latest
+    restart: always
+    pull_policy: always
+    environment:
+      - DHPARAM_BITS=4096
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # These are the same volumes used by the nginx image.
+      # This is on purpose since the letsencrypt companion container works
+      # with the nginx container collaboratively to generate SSL certs.
+      - /etc/ssl/certs:/etc/nginx/certs:rw
+      - nginx_vhost:/etc/nginx/vhost.d
+      - nginx_html:/usr/share/nginx/html
+      - nginx-acme:/etc/acme.sh
+    logging: *default-logging
+
   web:
-    image: ${DOCKER_NAMESPACE}/web:${DOCKER_TAG}
+    image: ${DOCKER_NAMESPACE}/harmony-web:${DOCKER_TAG}
     restart: always
     pull_policy: always
     ports:
@@ -36,7 +75,7 @@ services:
     platform: linux/amd64
 
   worker:
-    image: ${DOCKER_NAMESPACE}/web:${DOCKER_TAG}
+    image: ${DOCKER_NAMESPACE}/harmony-web:${DOCKER_TAG}
     restart: always
     pull_policy: always
     ports:
@@ -92,3 +131,34 @@ services:
       - HASURA_GRAPHQL_DATABASE_URL=${DATABASE_URL}
     volumes:
       - ${OUTPUT_PATH}/logs:/logs
+
+  postgres:
+    # It's not recommended to run postgres on the same host as the web
+    # this configuration is included as a convenience when it can't be avoided.
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - ${PG_DATA:-/usr/local/pgsql/data}:/var/lib/postgresql/data
+    profiles:
+      - postgres
+
+volumes:
+  # Let's Encrypt container needs to configure the vhosts during
+  # cert issuing.
+  nginx_vhost:
+
+  # This html directory is only used to write let's encrypt challenge
+  # files during the cert issuing process.
+  nginx_html:
+
+  # The acme.sh diretory stores the generated certificate state
+  # This prevents re-issuing of the certificate if the container is restarted/re-created
+  # It should only issue if there is no certificate or it is close to expiry.
+  # Read more here: https://github.com/nginx-proxy/acme-companion/issues/510
+  nginx-acme:

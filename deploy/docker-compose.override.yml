@@ -43,7 +43,7 @@ services:
         "./docker/entrypoint_pipeline.sh"
       ]
 volumes:
-  druid_shared: 
+  druid_shared:
     driver: local
     driver_opts:
       type: none
