@@ -1,4 +1,4 @@
-DOCKER_NAMESPACE=local
+DOCKER_NAMESPACE=zengineering
 DOCKER_TAG=latest
 
 web_client_build:
