@@ -1,0 +1,11 @@
+#!/bin/bash -eu
+set -o pipefail
+
+pushd "${PIPELINE_FEED_DIR}" &> /dev/null
+
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/shared/cid_mappings/cid10_flat.csv' \
+    -o cid10_flat.csv
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/sinasc/cid_mappings/priority_congenital_anomalies.csv' \
+    -o priority_congenital_anomalies.csv
+
+popd &> /dev/null

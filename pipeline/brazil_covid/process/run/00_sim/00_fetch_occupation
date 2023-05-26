@@ -1,0 +1,35 @@
+#!/bin/bash -eu
+set -o pipefail
+
+# Cleanup data if pipeline run multiple times.
+rm -rf "${PIPELINE_FEED_DIR}/"short_occupation_*.csv
+rm -rf "${PIPELINE_FEED_DIR}/cbo94_to_cbo2002.csv"
+rm -rf "${PIPELINE_FEED_DIR}/"cbo_*.csv
+
+pushd "${PIPELINE_FEED_DIR}" &> /dev/null
+
+# Lookups between code and title/ subgroup/ group for 3 digit pre 2002 codes
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/shared/cbo_mappings/short_occupation_title.csv' \
+    -o short_occupation_title.csv
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/shared/cbo_mappings/short_occupation_subgroup.csv' \
+    -o short_occupation_subgroup.csv
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/shared/cbo_mappings/short_occupation_group.csv' \
+    -o short_occupation_group.csv
+
+# Lookup between CBO 1994 5 digit codes to CBO 2002 6 digit codes
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/shared/cbo_mappings/cbo94_to_cbo2002.csv' \
+    -o cbo94_to_cbo2002.csv
+
+# Lookups between code and title/ family/ subgroup/ principal subgroup/ group for 6 digit CBO 2002 codes
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/shared/cbo_mappings/cbo_titulo.csv' \
+    -o cbo_titulo.csv
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/shared/cbo_mappings/cbo_familia.csv' \
+    -o cbo_familia.csv
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/shared/cbo_mappings/cbo_subgrupo.csv' \
+    -o cbo_subgrupo.csv
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/shared/cbo_mappings/cbo_subgrupo_principal.csv' \
+    -o cbo_subgrupo_principal.csv
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/shared/cbo_mappings/cbo_grande_grupo.csv' \
+    -o cbo_grande_grupo.csv
+
+popd &> /dev/null
