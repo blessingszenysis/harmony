@@ -9,7 +9,7 @@ x-logging:
 
 services:
   web:
-    image: ${DOCKER_NAMESPACE}/harmony-web:${DOCKER_TAG}
+    image: ${DOCKER_NAMESPACE}/web:${DOCKER_TAG}
     restart: always
     pull_policy: always
     ports:
@@ -36,7 +36,7 @@ services:
     platform: linux/amd64
 
   worker:
-    image: ${DOCKER_NAMESPACE}/harmony-web:${DOCKER_TAG}
+    image: ${DOCKER_NAMESPACE}/web:${DOCKER_TAG}
     restart: always
     pull_policy: always
     ports:
