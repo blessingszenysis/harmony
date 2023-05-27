@@ -70,6 +70,7 @@ services:
       - ${INSTANCE_CONFIG}:/zenysis/instance_config.json
       - ${GLOBAL_CONFIG}:/zenysis/global_config.py
       - ${UPLOADS_DIR}:/zenysis/uploads
+      - ${VAULT_TOKEN}:/zenysis/vault-token-via-agent
     command: [ "/zenysis/docker/entrypoint_web.sh" ]
     logging: *default-logging
     platform: linux/amd64
