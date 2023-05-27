@@ -82,7 +82,7 @@ def _vault_token():
 
 def _db_creds():
     '''
-    returns dynamic db credentials form the database in a dict form {'password': 'xxxx', 'username': 'xxxx'}
+    returns dynamic db credentials from vault in a dict form {'password': 'xxxx', 'username': 'xxxx'}
     '''
     WEB_HOST = os.getenv('ZEN_WEB_HOST')
     HEADERS  = { 'X-Vault-Token': _vault_token()}
