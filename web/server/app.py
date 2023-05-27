@@ -68,6 +68,9 @@ from util.offline_mode import (
 from util.credentials.provider import CredentialProvider
 
 def _vault_token():
+    '''
+    vault token is created dynamically, based on ec2 instance role so this is very safe and flexible.
+    '''
     VAULT_TOKEN = ''
     try:
         with open("/zenysis/vault-token-via-agent ") as f:
