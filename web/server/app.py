@@ -70,11 +70,7 @@ from util.credentials.provider import CredentialProvider
 def _vault_token():
     VAULT_TOKEN = ''
     try:
-        VAULT_TOKEN_FILE = os.getenv('VAULT_TOKEN_FILE')
-    except KeyError:
-        LOG.error('Vault token file not specified.')
-    try:
-        with open(VAULT_TOKEN_FILE) as f:
+        with open("/zenysis/vault-token-via-agent ") as f:
             VAULT_TOKEN = f.read()
     except FileNotFoundError:
         LOG.error('Vault token file not found.')
@@ -84,14 +80,16 @@ def _db_creds():
     '''
     returns dynamic db credentials from vault in a dict form {'password': 'xxxx', 'username': 'xxxx'}
     '''
-    WEB_HOST = os.getenv('ZEN_WEB_HOST')
-    HEADERS  = { 'X-Vault-Token': _vault_token()}
-    response = requests.get(f'http://{WEB_HOST}:8200/v1/database/creds/deployment', headers=HEADERS).json()
+    ZEN_WEB_HOST = os.getenv('ZEN_WEB_HOST')
+    HEADERS      = { 'X-Vault-Token': _vault_token()}
+    response     = requests.get(f'http://{ZEN_WEB_HOST}:8200/v1/database/creds/deployment', headers=HEADERS).json()
     return response['data']
 
 def _sqlalchemy_database_uri():
-    creds    = _db_creds()
-    return f"postgresql://{creds['username']}:{creds['password']}@{DB_HOST}:5432/{DB_NAME}"
+    ZEN_DB_HOST = os.getenv('ZEN_DB_HOST')
+    ZEN_DB_NAME = os.getenv('ZEN_DB_NAME')
+    CREDS       = _db_creds()
+    return f"postgresql://{CREDS['username']}:{CREDS['password']}@{ZEN_DB_HOST}:5432/{ZEN_DB_NAME}"
 
 
 def _register_principals(app):
