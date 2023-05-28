@@ -73,7 +73,7 @@ def _vault_token():
     '''
     VAULT_TOKEN = ''
     try:
-        with open("/zenysis/vault-token-via-agent ") as f:
+        with open("/zenysis/vault-token-via-agent") as f:
             VAULT_TOKEN = f.read()
     except FileNotFoundError:
         LOG.error('Vault token file not found.')
@@ -83,6 +83,7 @@ def _db_creds():
     '''
     returns dynamic db credentials from vault in a dict form {'password': 'xxxx', 'username': 'xxxx'}
     '''
+    LOG.info(os.getenv) # for debugging - to be removed PLEASE
     ZEN_WEB_HOST = os.getenv('ZEN_WEB_HOST')
     HEADERS      = { 'X-Vault-Token': _vault_token()}
     response     = requests.get(f'http://{ZEN_WEB_HOST}:8200/v1/database/creds/deployment', headers=HEADERS).json()
