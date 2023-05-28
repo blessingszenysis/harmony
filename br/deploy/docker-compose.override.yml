@@ -1,0 +1,54 @@
+# brazil specific overrides
+services:
+  nginx-letsencrypt-companion:
+    profiles:
+      - do_not_start
+  web-renderer:
+    profiles:
+      - do_not_start
+  web:
+    pull_policy: never
+    environment:
+      - DISABLE_GROUPED_SKETCH_SIZE_COMPUTATION=1
+  worker:
+    pull_policy: never
+    profiles:
+      - do_not_start
+  pipeline:
+    image: ${DOCKER_NAMESPACE}/harmony-etl-pipeline:${DOCKER_TAG}
+    pull_policy: never
+    profiles:
+      - pipeline
+    volumes:
+      - druid_shared:/home/share
+      - ${OUTPUT_PATH:-/data/output}:/zenysis/pipeline/out
+      - ${GLOBAL_CONFIG}:/zenysis/global_config.py
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - ZEN_ENV=${ZEN_ENV}
+      - DRUID_HOST=${DRUID_HOST}
+      - COMMAND=${COMMAND-echo Specify a pipeline command, e.g. "./pipeline/br/generate/zeus_generate run"}
+      - PYTHONPATH=/zenysis
+      - ZEN_HOME=/zenysis
+      - R77_SRC_ROOT=/zenysis
+    deploy:
+      resources:
+        limits:
+          memory: 50g
+    user: ${PIPELINE_USER:-1000}:${PIPELINE_GROUP:-1000}
+    command:
+      [
+        "/bin/bash",
+        "-c",
+        "./docker/entrypoint_pipeline.sh"
+      ]
+volumes:
+  druid_shared: 
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DRUID_SHARED_FOLDER:-/home/share}
+  web_venv:
+  web_venv_pypy3:
+  web_node_modules:

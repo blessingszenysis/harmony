@@ -1,0 +1,13 @@
+#!/bin/bash -eu
+set -o pipefail
+
+pushd "${PIPELINE_FEED_DIR}" &> /dev/null
+
+# SINASC is only 1996+ so there's no need for cid 9 codes
+"${PIPELINE_BIN_DIR}/shared/convert_cid_csv.py" \
+  --input_cid10="cid10_flat.csv" \
+  --additional_mappings \
+    "priority_congenital_anomalies.csv:parent,GRUPOS DE ANOMALIAS CONGÊNITAS PRIORITÁRIAS:CodigoAnomaliaPriority" \
+  --output_file="output_cid.csv"
+
+popd &> /dev/null

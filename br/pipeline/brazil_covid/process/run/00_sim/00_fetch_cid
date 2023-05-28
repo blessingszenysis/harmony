@@ -1,0 +1,19 @@
+#!/bin/bash -eu
+set -o pipefail
+
+pushd "${PIPELINE_FEED_DIR}" &> /dev/null
+
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/shared/cid_mappings/cid9.csv' \
+    -o cid9.csv
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/shared/cid_mappings/cid10_flat.csv' \
+    -o cid10_flat.csv
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/sim/cid_mappings/garbage_code_levels.csv' \
+    -o garbage_code_levels.csv
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/sim/cid_mappings/dant_plan_categories.csv' \
+    -o dant_plan_categories.csv
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/sim/cid_mappings/alcohol_titles.csv' \
+    -o alcohol_titles.csv
+curl 'https://zenysis-br-covid-assets.s3.amazonaws.com/integration_trainings/sim/cid_mappings/mother_mortality.csv' \
+    -o mother_mortality.csv
+
+popd &> /dev/null
