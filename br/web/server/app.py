@@ -1,7 +1,7 @@
 ''' Handle initialization and setup of the flask app and all its dependencies.
 '''
 import os
-
+import requests
 from typing import Optional
 
 from flask import Flask
@@ -66,6 +66,33 @@ from util.offline_mode import (
     MockGeoExplorerCache,
 )
 from util.credentials.provider import CredentialProvider
+
+def _vault_token():
+    '''
+    vault token is created dynamically, based on ec2 instance role so this is very safe and flexible.
+    '''
+    VAULT_TOKEN = ''
+    try:
+        with open("/zenysis/vault-token-via-agent ") as f:
+            VAULT_TOKEN = f.read()
+    except FileNotFoundError:
+        LOG.error('Vault token file not found.')
+    return VAULT_TOKEN
+
+def _db_creds():
+    '''
+    returns dynamic db credentials from vault in a dict form {'password': 'xxxx', 'username': 'xxxx'}
+    '''
+    ZEN_WEB_HOST = os.getenv('ZEN_WEB_HOST')
+    HEADERS      = { 'X-Vault-Token': _vault_token()}
+    response     = requests.get(f'http://{ZEN_WEB_HOST}:8200/v1/database/creds/deployment', headers=HEADERS).json()
+    return response['data']
+
+def _sqlalchemy_database_uri():
+    ZEN_DB_HOST = os.getenv('ZEN_DB_HOST')
+    ZEN_DB_NAME = os.getenv('ZEN_DB_NAME')
+    CREDS       = _db_creds()
+    return f"postgresql://{CREDS['username']}:{CREDS['password']}@{ZEN_DB_HOST}:5432/{ZEN_DB_NAME}"
 
 
 def _register_principals(app):
@@ -432,16 +459,14 @@ def create_app(
     if not flask_config:
         flask_config = FlaskConfiguration()
         instance_config = (
-            instance_config
+            qA
             if instance_config is not None
             else load_instance_configuration_from_file()
         )
         flask_config.apply_instance_config_overrides(instance_config)
         with CredentialProvider(instance_config) as credential_provider:
-            flask_config.SQLALCHEMY_DATABASE_URI = credential_provider.get(
-                'SQLALCHEMY_DATABASE_URI'
-            )
-            flask_config.MAILGUN_API_KEY = credential_provider.get('MAILGUN_API_KEY')
+            flask_config.SQLALCHEMY_DATABASE_URI = _sqlalchemy_database_uri()
+            flask_config.MAILGUN_API_KEY         = credential_provider.get('MAILGUN_API_KEY')
 
     if not zenysis_environment:
         zenysis_environment = os.getenv('ZEN_ENV')
